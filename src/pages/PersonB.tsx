@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ChatHeader from "@/components/ChatHeader";
 import ProductCard from "@/components/ProductCard";
@@ -7,54 +7,39 @@ import MessageBubble from "@/components/MessageBubble";
 import ChatInput from "@/components/ChatInput";
 import OfferInput from "@/components/OfferInput";
 import { Button } from "@/components/ui/button";
-
-type Message = {
-  id: number;
-  text: string;
-  sender: "buyer" | "seller";
-  timestamp: string;
-  isOffer?: boolean;
-};
+import { messageService, type Message } from "@/utils/messageService";
 
 const PersonB = () => {
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      text: "Hi there!",
-      sender: "seller",
-      timestamp: "09:15"
-    }
-  ]);
-
+  const [messages, setMessages] = useState<Message[]>([]);
   const [showOfferInput, setShowOfferInput] = useState(false);
 
-  const handleSendMessage = (text: string) => {
-    const newMessage: Message = {
-      id: messages.length + 1,
-      text,
-      sender: "buyer",
-      timestamp: new Date().toLocaleTimeString('en-US', { 
-        hour12: false, 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      })
+  useEffect(() => {
+    // Load initial messages
+    setMessages(messageService.getMessages());
+
+    // Listen for storage changes to sync messages
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'chat_messages' && e.newValue) {
+        setMessages(JSON.parse(e.newValue));
+      }
     };
-    setMessages([...messages, newMessage]);
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
+  const handleSendMessage = (text: string) => {
+    const updatedMessages = messageService.addMessage(text, "buyer");
+    setMessages(updatedMessages);
   };
 
   const handleMakeOffer = (amount: string) => {
-    const offerMessage: Message = {
-      id: messages.length + 1,
-      text: `Offer received: ${amount}€`,
-      sender: "buyer",
-      timestamp: new Date().toLocaleTimeString('en-US', { 
-        hour12: false, 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
-      isOffer: true
-    };
-    setMessages([...messages, offerMessage]);
+    const updatedMessages = messageService.addMessage(
+      `Offer received: ${amount}€`, 
+      "buyer", 
+      true
+    );
+    setMessages(updatedMessages);
     setShowOfferInput(false);
   };
 

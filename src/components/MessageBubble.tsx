@@ -1,12 +1,5 @@
 
-interface Message {
-  id: number;
-  text: string;
-  sender: "buyer" | "seller";
-  timestamp: string;
-  isOffer?: boolean;
-  isOfferAccepted?: boolean;
-}
+import { type Message } from "@/utils/messageService";
 
 interface MessageBubbleProps {
   message: Message;
