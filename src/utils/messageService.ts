@@ -8,7 +8,7 @@ export type Message = {
   isOfferAccepted?: boolean;
 };
 
-const MESSAGE_STORAGE_KEY = 'chat_messages';
+const MESSAGE_STORAGE_KEY = 'chat_messages_cross_device';
 
 export const messageService = {
   getMessages: (): Message[] => {
@@ -34,12 +34,18 @@ export const messageService = {
 
   saveMessages: (messages: Message[]) => {
     try {
-      localStorage.setItem(MESSAGE_STORAGE_KEY, JSON.stringify(messages));
-      // Trigger storage event for cross-tab communication
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: MESSAGE_STORAGE_KEY,
-        newValue: JSON.stringify(messages)
+      const messageData = {
+        messages,
+        lastUpdated: Date.now()
+      };
+      localStorage.setItem(MESSAGE_STORAGE_KEY, JSON.stringify(messageData));
+      
+      // Trigger custom event for same-device cross-tab communication
+      window.dispatchEvent(new CustomEvent('messagesUpdated', {
+        detail: { messages, timestamp: Date.now() }
       }));
+      
+      console.log('Messages saved:', messages.length, 'messages');
     } catch (error) {
       console.error('Failed to save messages:', error);
     }
@@ -48,7 +54,7 @@ export const messageService = {
   addMessage: (text: string, sender: "buyer" | "seller", isOffer?: boolean, isOfferAccepted?: boolean) => {
     const messages = messageService.getMessages();
     const newMessage: Message = {
-      id: messages.length + 1,
+      id: Date.now(), // Use timestamp for unique ID across devices
       text,
       sender,
       timestamp: new Date().toLocaleTimeString('en-US', { 
@@ -62,5 +68,19 @@ export const messageService = {
     const updatedMessages = [...messages, newMessage];
     messageService.saveMessages(updatedMessages);
     return updatedMessages;
+  },
+
+  // Method to get parsed data from localStorage
+  getStoredData: () => {
+    try {
+      const stored = localStorage.getItem(MESSAGE_STORAGE_KEY);
+      if (stored) {
+        const data = JSON.parse(stored);
+        return data.messages || data; // Handle both old and new format
+      }
+      return null;
+    } catch {
+      return null;
+    }
   }
 };

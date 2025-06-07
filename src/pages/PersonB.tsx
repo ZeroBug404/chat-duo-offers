@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import ChatHeader from "@/components/ChatHeader";
@@ -17,15 +16,46 @@ const PersonB = () => {
     // Load initial messages
     setMessages(messageService.getMessages());
 
-    // Listen for storage changes to sync messages
+    // Listen for localStorage changes (works across tabs on same device)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'chat_messages' && e.newValue) {
-        setMessages(JSON.parse(e.newValue));
+      if (e.key === 'chat_messages_cross_device' && e.newValue) {
+        try {
+          const data = JSON.parse(e.newValue);
+          const newMessages = data.messages || data;
+          setMessages(newMessages);
+          console.log('PersonB: Messages updated via storage event');
+        } catch (error) {
+          console.error('Error parsing storage data:', error);
+        }
       }
     };
 
+    // Listen for custom events (same device, different tabs)
+    const handleCustomEvent = (e: CustomEvent) => {
+      setMessages(e.detail.messages);
+      console.log('PersonB: Messages updated via custom event');
+    };
+
+    // Poll for changes (works across devices sharing same localStorage)
+    const pollInterval = setInterval(() => {
+      const currentMessages = messageService.getMessages();
+      setMessages(prev => {
+        if (JSON.stringify(prev) !== JSON.stringify(currentMessages)) {
+          console.log('PersonB: Messages updated via polling');
+          return currentMessages;
+        }
+        return prev;
+      });
+    }, 2000); // Check every 2 seconds
+
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('messagesUpdated', handleCustomEvent as EventListener);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('messagesUpdated', handleCustomEvent as EventListener);
+      clearInterval(pollInterval);
+    };
   }, []);
 
   const handleSendMessage = (text: string) => {
