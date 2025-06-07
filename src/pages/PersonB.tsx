@@ -8,12 +8,20 @@ import ChatInput from "@/components/ChatInput";
 import OfferInput from "@/components/OfferInput";
 import { Button } from "@/components/ui/button";
 
+type Message = {
+  id: number;
+  text: string;
+  sender: "buyer" | "seller";
+  timestamp: string;
+  isOffer?: boolean;
+};
+
 const PersonB = () => {
-  const [messages, setMessages] = useState([
+  const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       text: "Hi there!",
-      sender: "seller" as const,
+      sender: "seller",
       timestamp: "09:15"
     }
   ]);
@@ -21,10 +29,10 @@ const PersonB = () => {
   const [showOfferInput, setShowOfferInput] = useState(false);
 
   const handleSendMessage = (text: string) => {
-    const newMessage = {
+    const newMessage: Message = {
       id: messages.length + 1,
       text,
-      sender: "buyer" as const,
+      sender: "buyer",
       timestamp: new Date().toLocaleTimeString('en-US', { 
         hour12: false, 
         hour: '2-digit', 
@@ -35,10 +43,10 @@ const PersonB = () => {
   };
 
   const handleMakeOffer = (amount: string) => {
-    const offerMessage = {
+    const offerMessage: Message = {
       id: messages.length + 1,
       text: `Offer received: ${amount}€`,
-      sender: "buyer" as const,
+      sender: "buyer",
       timestamp: new Date().toLocaleTimeString('en-US', { 
         hour12: false, 
         hour: '2-digit', 

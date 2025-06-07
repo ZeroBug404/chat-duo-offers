@@ -3,24 +3,21 @@ import { useState } from "react";
 import { ArrowLeft, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import NumberPadModal from "@/components/NumberPadModal";
 
 const Offers = () => {
   const [amount, setAmount] = useState("");
+  const [showNumberPad, setShowNumberPad] = useState(false);
 
-  const handleNumberClick = (num: string) => {
-    if (num === "⌫") {
-      setAmount(prev => prev.slice(0, -1));
-    } else {
-      setAmount(prev => prev + num);
-    }
+  const handleInputClick = () => {
+    setShowNumberPad(true);
   };
 
-  const keypadNumbers = [
-    ["1", "2", "3"],
-    ["4", "5", "6"], 
-    ["7", "8", "9"],
-    ["", "0", "⌫"]
-  ];
+  const handleAmountChange = (newAmount: string) => {
+    setAmount(newAmount);
+    setShowNumberPad(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 max-w-md mx-auto">
@@ -72,36 +69,13 @@ const Offers = () => {
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-2 mb-4">
-            {keypadNumbers.map((row, rowIndex) => 
-              row.map((num, colIndex) => (
-                <button
-                  key={`${rowIndex}-${colIndex}`}
-                  onClick={() => num && handleNumberClick(num)}
-                  className={`h-12 rounded-lg font-semibold text-lg ${
-                    num === "" 
-                      ? "invisible" 
-                      : "bg-gray-100 hover:bg-gray-200 active:bg-gray-300"
-                  }`}
-                  disabled={num === ""}
-                >
-                  {num === "⌫" ? "✕" : num}
-                  {num && num !== "⌫" && (
-                    <div className="text-xs text-gray-400 mt-1">
-                      {num === "2" && "ABC"}
-                      {num === "3" && "DEF"}
-                      {num === "4" && "GHI"}
-                      {num === "5" && "JKL"}
-                      {num === "6" && "MNO"}
-                      {num === "7" && "PQRS"}
-                      {num === "8" && "TUV"}
-                      {num === "9" && "WXYZ"}
-                    </div>
-                  )}
-                </button>
-              ))
-            )}
-          </div>
+          <Input
+            value={amount ? `${amount}€` : ""}
+            placeholder="0€"
+            onClick={handleInputClick}
+            readOnly
+            className="text-center text-lg font-semibold cursor-pointer"
+          />
         </div>
         
         {/* Home indicator */}
@@ -109,6 +83,13 @@ const Offers = () => {
           <div className="w-32 h-1 bg-black rounded-full"></div>
         </div>
       </div>
+
+      <NumberPadModal 
+        isOpen={showNumberPad}
+        onClose={() => setShowNumberPad(false)}
+        onSubmit={handleAmountChange}
+        initialValue={amount}
+      />
     </div>
   );
 };
