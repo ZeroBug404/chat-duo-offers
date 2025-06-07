@@ -11,19 +11,19 @@ const PersonA = () => {
     {
       id: 1,
       text: "Hello Sandra",
-      sender: "buyer",
+      sender: "buyer" as const,
       timestamp: "11:59"
     },
     {
       id: 2,
       text: "Your offer is a bit low, I'm ready to accept 2 800€.",
-      sender: "seller",
+      sender: "seller" as const,
       timestamp: "11:59"
     },
     {
       id: 3,
       text: "Hello Gintare, I'm sorry 😔 but I can't pay more that 2 700€",
-      sender: "buyer",
+      sender: "buyer" as const,
       timestamp: "12:00"
     }
   ]);

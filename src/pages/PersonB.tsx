@@ -1,17 +1,19 @@
 
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import ChatHeader from "@/components/ChatHeader";
 import ProductCard from "@/components/ProductCard";
 import MessageBubble from "@/components/MessageBubble";
 import ChatInput from "@/components/ChatInput";
 import OfferInput from "@/components/OfferInput";
+import { Button } from "@/components/ui/button";
 
 const PersonB = () => {
   const [messages, setMessages] = useState([
     {
       id: 1,
       text: "Hi there!",
-      sender: "seller",
+      sender: "seller" as const,
       timestamp: "09:15"
     }
   ]);
@@ -73,6 +75,14 @@ const PersonB = () => {
               <p className="mt-1">If you have problems with another member, please use the report function.</p>
             </div>
           </div>
+        </div>
+        
+        <div className="px-4 py-3 border-t border-gray-100">
+          <Link to="/offers">
+            <Button variant="outline" className="w-full border-gray-300 text-gray-700 hover:bg-gray-50">
+              📝 Contact seller
+            </Button>
+          </Link>
         </div>
       </div>
 
