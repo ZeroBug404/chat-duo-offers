@@ -15,27 +15,27 @@ const AllChats = () => {
   const navigate = useNavigate();
   const { selectedProduct } = useProduct();
   const [chats, setChats] = useState<ChatItem[]>([
-    {
-      id: "1",
-      productName: "ps 3",
-      price: 330.0,
-      seller: "van dijk",
-      hasImage: true,
-    },
-    {
-      id: "2",
-      productName: "Playstation 5 disc editor",
-      price: 34532.0,
-      seller: "Vad der Dussen",
-      hasImage: true,
-    },
-    {
-      id: "3",
-      productName: "Play Station",
-      price: 3453.0,
-      seller: "Van Dijk",
-      hasImage: true,
-    },
+    // {
+    //   id: "1",
+    //   productName: "ps 3",
+    //   price: 330.0,
+    //   seller: "van dijk",
+    //   hasImage: true,
+    // },
+    // {
+    //   id: "2",
+    //   productName: "Playstation 5 disc editor",
+    //   price: 34532.0,
+    //   seller: "Vad der Dussen",
+    //   hasImage: true,
+    // },
+    // {
+    //   id: "3",
+    //   productName: "Play Station",
+    //   price: 3453.0,
+    //   seller: "Van Dijk",
+    //   hasImage: true,
+    // },
   ]);
 
   // Add the selected product to the chats list if it exists and isn't already in the list

@@ -112,10 +112,23 @@ const PersonB = () => {
     const updatedMessages = messageService.addMessage(
       `Offer received: ${amount}€`,
       "buyer",
-      true
+      true,
+      false,
+      true, // hasButton
+      "Accept Offer", // buttonText
+      "accept_offer" // buttonAction
     );
     setMessages(updatedMessages);
     setShowOfferInput(false);
+  };
+
+  const handleButtonClick = (action: string) => {
+    console.log("Button clicked with action:", action);
+    if (action === "track_shipment") {
+      navigate("/order-tracking");
+    } else if (action === "view_offer") {
+      navigate("/offers");
+    }
   };
 
   const scrollToBottom = () => {
@@ -195,6 +208,7 @@ const PersonB = () => {
                 key={message.id}
                 message={message}
                 avatar={"/uploads/customer.png"}
+                onButtonClick={handleButtonClick}
               />
             ))}
           <div ref={messagesEndRef} />

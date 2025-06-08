@@ -1,6 +1,6 @@
-import { useState } from "react";
-import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Send } from "lucide-react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
 interface ChatInputProps {
@@ -74,7 +74,7 @@ const ChatInput = ({
             onClick={handleOfferAccepted}
             className="w-full bg-green-600 text-white hover:bg-green-700"
           >
-            Pyment Received
+            Payment Received
           </Button>
         </div>
       )}

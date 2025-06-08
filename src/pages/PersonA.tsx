@@ -1,7 +1,6 @@
 import ChatHeader from "@/components/ChatHeader";
 import ChatInput from "@/components/ChatInput";
 import MessageBubble from "@/components/MessageBubble";
-import OfferCard from "@/components/OfferCard";
 import ProductCard from "@/components/ProductCard";
 import { messageService, type Message } from "@/utils/messageService";
 import { useProduct } from "@/utils/productContext";
@@ -110,14 +109,55 @@ const PersonA = () => {
   const handleSendOffer = (amount: string, address: string) => {
     console.log("Sending offer for amount:", amount);
 
-    const updatedMessages = messageService.addMessage(
+    const message = {
       // `Order received for ${amount}`,
-      `Payment received: ${amount}. You can sent the item now to address ${address}`,
-      "seller",
-      false,
-      true
+      text: `Payment received: ${amount}. You can send the item now to address ${
+        address || "Dhaka"
+      } Receive Post Address Info By Whatsapp`,
+      sender: "seller" as const,
+      isOffer: false,
+      isOfferAccepted: true,
+      hasButton: true, // hasButton
+      buttonText: "Track Shipment", // buttonText
+      buttonAction: "track_shipment", // buttonAction
+      productInfo: {
+        image: selectedProduct?.image || "/uploads/chanel.png",
+        title: selectedProduct?.productName || "Luxury Product",
+        price: amount,
+        condition: selectedProduct?.condition || "New",
+      },
+    };
+
+    const updatedMessages = messageService.addMessage(
+      message.text,
+      message.sender,
+      message.isOffer,
+      message.isOfferAccepted,
+      message.hasButton,
+      message.buttonText,
+      message.buttonAction
     );
+
+    // Add product info to the last message
+    updatedMessages[updatedMessages.length - 1].productInfo =
+      message.productInfo;
+
+    // Save the updated messages
+    messageService.saveMessages(updatedMessages);
     setMessages(updatedMessages);
+  };
+
+  const handleButtonClick = (action: string) => {
+    console.log("Button clicked with action:", action);
+    if (action === "track_shipment") {
+      navigate("/order-tracking");
+    } else if (action === "accept_offer") {
+      // Handle accepting the offer
+      handleSendOffer(selectedProduct?.price || "0", "");
+    } else if (action === "view_order_details") {
+      // Navigate to order tracking page
+      navigate("/order-tracking");
+    }
   };
 
   const scrollToBottom = () => {
@@ -128,6 +168,8 @@ const PersonA = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  console.log(selectedProduct);
 
   return (
     <div className="h-screen bg-gray-50 max-w-md mx-auto flex flex-col">
@@ -144,6 +186,7 @@ const PersonA = () => {
             condition={selectedProduct.condition}
             price={selectedProduct.price}
             image={selectedProduct.image}
+            title={selectedProduct.productName}
           />
         ) : (
           <ProductCard
@@ -169,6 +212,7 @@ const PersonA = () => {
                 key={message.id}
                 message={message}
                 avatar={"/uploads/admin.png"}
+                onButtonClick={handleButtonClick}
               />
             ))}
           <div ref={messagesEndRef} />

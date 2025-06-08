@@ -5,6 +5,15 @@ export type Message = {
   timestamp: string;
   isOffer?: boolean;
   isOfferAccepted?: boolean;
+  hasButton?: boolean;
+  buttonText?: string;
+  buttonAction?: string; // Can be used to determine what action to take when the button is clicked
+  productInfo?: {
+    image: string;
+    title: string;
+    price: string;
+    condition: string;
+  };
 };
 
 const MESSAGE_STORAGE_KEY = "chat_messages_cross_device";
@@ -75,7 +84,10 @@ export const messageService = {
     text: string,
     sender: "buyer" | "seller",
     isOffer?: boolean,
-    isOfferAccepted?: boolean
+    isOfferAccepted?: boolean,
+    hasButton?: boolean,
+    buttonText?: string,
+    buttonAction?: string
   ) => {
     const messages = messageService.getMessages();
     const newMessage: Message = {
@@ -89,6 +101,9 @@ export const messageService = {
       }),
       isOffer,
       isOfferAccepted,
+      hasButton,
+      buttonText,
+      buttonAction,
     };
     const updatedMessages = [...messages, newMessage];
     messageService.saveMessages(updatedMessages);
