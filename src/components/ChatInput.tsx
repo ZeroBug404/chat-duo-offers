@@ -1,16 +1,25 @@
-
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
-  onSendOffer?: (amount: string) => void;
+  onSendOffer?: (amount: string, address: string) => void;
   onMakeOffer?: () => void;
   showOfferButton?: boolean;
+  price?: string;
+  address?: string;
 }
 
-const ChatInput = ({ onSendMessage, onSendOffer, onMakeOffer, showOfferButton = false }: ChatInputProps) => {
+const ChatInput = ({
+  onSendMessage,
+  onSendOffer,
+  onMakeOffer,
+  showOfferButton = false,
+  price,
+  address,
+}: ChatInputProps) => {
   const [message, setMessage] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,7 +32,7 @@ const ChatInput = ({ onSendMessage, onSendOffer, onMakeOffer, showOfferButton = 
 
   const handleOfferAccepted = () => {
     if (onSendOffer) {
-      onSendOffer("2 700");
+      onSendOffer(price || "0", address || "");
     }
   };
 
@@ -31,16 +40,18 @@ const ChatInput = ({ onSendMessage, onSendOffer, onMakeOffer, showOfferButton = 
     <div className="bg-white border-t border-gray-200 p-4">
       {showOfferButton && (
         <div className="mb-3">
-          <Button 
-            onClick={onMakeOffer}
-            variant="outline"
-            className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            Make an Offer
-          </Button>
+          <Link to="/offers">
+            <Button
+              // onClick={onMakeOffer}
+              variant="outline"
+              className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
+            >
+              Make an Offer
+            </Button>
+          </Link>
         </div>
       )}
-      
+
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <input
           type="text"
@@ -56,14 +67,14 @@ const ChatInput = ({ onSendMessage, onSendOffer, onMakeOffer, showOfferButton = 
           <Send className="w-5 h-5" />
         </button>
       </form>
-      
+
       {onSendOffer && (
         <div className="mt-3">
-          <Button 
+          <Button
             onClick={handleOfferAccepted}
             className="w-full bg-green-600 text-white hover:bg-green-700"
           >
-            Send "Offer accepted 2 700€ Order paid"
+            Pyment Received
           </Button>
         </div>
       )}

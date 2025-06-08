@@ -8,6 +8,8 @@ interface OfferCardProps {
 }
 
 const OfferCard = ({ amount, expiresIn, onAccept }: OfferCardProps) => {
+  console.log(amount);
+  
   return (
     <div className="px-4 py-4 bg-white border-b border-gray-100">
       <div className="flex items-center justify-between">
@@ -17,7 +19,7 @@ const OfferCard = ({ amount, expiresIn, onAccept }: OfferCardProps) => {
         </div>
         <Button 
           onClick={onAccept}
-          className="bg-black text-white hover:bg-gray-800 px-6 py-2 rounded-full"
+          className="bg-black text-white hover:bg-gray-800 px-6 py-2 rounded-lg"
         >
           Add to bag
         </Button>
