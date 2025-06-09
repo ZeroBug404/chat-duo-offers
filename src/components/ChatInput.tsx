@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Send } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -10,6 +10,16 @@ interface ChatInputProps {
   showOfferButton?: boolean;
   price?: string;
   address?: string;
+  productInfo?: {
+    title?: string;
+    image?: string;
+    brand?: string;
+    condition?: string;
+    street?: string;
+    postalCode?: string;
+    city?: string;
+    country?: string;
+  };
 }
 
 const ChatInput = ({
@@ -19,8 +29,10 @@ const ChatInput = ({
   showOfferButton = false,
   price,
   address,
+  productInfo,
 }: ChatInputProps) => {
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +43,32 @@ const ChatInput = ({
   };
 
   const handleOfferAccepted = () => {
-    if (onSendOffer) {
-      onSendOffer(price || "0", address || "");
-    }
+    // if (onSendOffer) {
+    // First trigger the payment received message
+    // onSendOffer(price || "0", address || "");
+
+    // Create order details for the order tracking page with improved product info
+    const orderDetails = {
+      id: Date.now().toString(),
+      productName: productInfo?.title || "Product",
+      brandName: productInfo?.condition,
+      price: price || "0",
+      image: productInfo?.image || "/placeholder.svg",
+      condition: productInfo?.condition || "No description",
+      address: address || "Not specified",
+      street: productInfo?.street || "",
+      postalCode: productInfo?.postalCode || "",
+      city: productInfo?.city || "",
+      country: productInfo?.country || "",
+      refNumber: Math.floor(Math.random() * 90000000) + 10000000 + "",
+    };
+
+    // Store in localStorage as backup
+    localStorage.setItem("current_order_details", JSON.stringify(orderDetails));
+
+    // Navigate to order tracking page
+    navigate("/order-tracking", { state: { orderDetails } });
+    // }
   };
 
   return (

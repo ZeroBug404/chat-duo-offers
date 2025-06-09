@@ -1,7 +1,17 @@
-import { useState, useEffect } from "react";
-import { ChevronLeft, ImageIcon, Trash2, MessageCircle } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { messageService } from "@/utils/messageService";
 import { useProduct } from "@/utils/productContext";
+import {
+  ChevronLeft,
+  Copy,
+  ImageIcon,
+  MessageCircle,
+  Share2,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
 interface ChatItem {
   id: string;
@@ -13,75 +23,119 @@ interface ChatItem {
 
 const AllChats = () => {
   const navigate = useNavigate();
-  const { selectedProduct } = useProduct();
-  const [chats, setChats] = useState<ChatItem[]>([
-    // {
-    //   id: "1",
-    //   productName: "ps 3",
-    //   price: 330.0,
-    //   seller: "van dijk",
-    //   hasImage: true,
-    // },
-    // {
-    //   id: "2",
-    //   productName: "Playstation 5 disc editor",
-    //   price: 34532.0,
-    //   seller: "Vad der Dussen",
-    //   hasImage: true,
-    // },
-    // {
-    //   id: "3",
-    //   productName: "Play Station",
-    //   price: 3453.0,
-    //   seller: "Van Dijk",
-    //   hasImage: true,
-    // },
-  ]);
+  const { selectedProduct, allProducts, setSelectedProduct, deleteProduct } =
+    useProduct();
+  const [chats, setChats] = useState<ChatItem[]>([]);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareableLink, setShareableLink] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const linkInputRef = useRef<HTMLInputElement>(null);
 
-  // Add the selected product to the chats list if it exists and isn't already in the list
+  // Load all chats from products in localStorage
   useEffect(() => {
-    if (selectedProduct && !chats.some(chat => chat.id === selectedProduct.id)) {
-      const price = parseFloat(selectedProduct.price.replace('€', '').trim());
-      setChats(prevChats => [
-        ...prevChats,
-        {
-          id: selectedProduct.id,
-          productName: selectedProduct.productName,
-          price: isNaN(price) ? 0 : price,
-          seller: selectedProduct.brand,
-          hasImage: !!selectedProduct.image,
-        }
-      ]);
-    }
-  }, [selectedProduct]);
+    // Convert products to chat items
+    const chatItems = allProducts.map((product) => {
+      const price = parseFloat(product.price.replace("€", "").trim());
+      return {
+        id: product.id,
+        productName: product.productName,
+        price: isNaN(price) ? 0 : price,
+        seller: product.brand,
+        hasImage: !!product.image,
+      };
+    });
+
+    setChats(chatItems);
+  }, [allProducts]);
 
   const handleDeleteChat = (id: string) => {
-    setChats(chats.filter((chat) => chat.id !== id));
+    // Delete the product from context (which also updates localStorage)
+    deleteProduct(id);
+
+    // Delete the chat messages from localStorage
+    messageService.deleteChat(id);
+
+    // Update the UI
+    setChats((prev) => prev.filter((chat) => chat.id !== id));
   };
 
   const handlePersonClick = (chatId: string, person: "admin" | "customer") => {
-    // Find the chat to get its details
-    const chat = chats.find(c => c.id === chatId);
-    if (!chat) return;
-    
-    // If this is the selected product's chat, we can navigate directly
-    if (selectedProduct && selectedProduct.id === chatId) {
-      // Navigate to the correct person page
-      if (person === "admin") {
-        navigate("/person-a");
-      } else {
-        navigate("/person-b");
-      }
+    // Find the product details for this chat
+    const product = allProducts.find((p) => p.id === chatId);
+
+    if (!product) {
+      alert("Product not found");
+      return;
+    }
+
+    // Set as the selected product
+    setSelectedProduct(product);
+
+    // Set as the active chat
+    messageService.setActiveChatId(chatId);
+
+    // Navigate to the correct person page
+    if (person === "admin") {
+      navigate("/person-a");
     } else {
-      // For other chats, we need to update the selected product first
-      // This is a simplified implementation; in a real app, you'd fetch the product details
-      alert(`To chat about this product, please select it first from the products page`);
-      navigate("/add-product");
+      navigate("/person-b");
+    }
+  };
+
+  const handleShare = (chatId: string) => {
+    // Generate shareable link (both admin and customer versions)
+    const adminLink = messageService.getShareableLink(chatId, "admin");
+
+    // Set the link to be shared
+    setShareableLink(adminLink);
+
+    // Show the dialog
+    setShowShareDialog(true);
+  };
+
+  const handleCopyLink = () => {
+    if (linkInputRef.current) {
+      linkInputRef.current.select();
+      document.execCommand("copy");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
-      
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" />
+              Share Chat Link
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Use this link to share the chat with others.
+            </p>
+            <div className="flex items-center space-x-2">
+              <div className="grid flex-1 gap-2">
+                <input
+                  ref={linkInputRef}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={shareableLink}
+                  readOnly
+                />
+              </div>
+              <Button type="button" size="icon" onClick={handleCopyLink}>
+                {copied ? (
+                  <span className="text-green-500 text-xs">Copied!</span>
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Header */}
       <div className="flex justify-between items-center px-6 py-4">
@@ -104,7 +158,7 @@ const AllChats = () => {
           Create New Chat
         </Link>
       </div>
-      
+
       {/* Chat List */}
       <div className="flex-1">
         {chats.length === 0 ? (
@@ -114,7 +168,8 @@ const AllChats = () => {
             </div>
             <p className="text-gray-500 text-lg mb-4">No chats available</p>
             <p className="text-gray-400 text-sm text-center">
-              Create your first chat by clicking the "Create New Chat" button above
+              Create your first chat by clicking the "Create New Chat" button
+              above
             </p>
           </div>
         ) : (
@@ -142,12 +197,20 @@ const AllChats = () => {
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleDeleteChat(chat.id)}
-                    className="text-red-500 hover:text-red-700 p-2"
-                  >
-                    <Trash2 className="h-5 w-5" />
-                  </button>
+                  <div className="flex">
+                    <button
+                      onClick={() => handleShare(chat.id)}
+                      className="text-gray-500 hover:text-blue-600 p-2"
+                    >
+                      <Share2 className="h-5 w-5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteChat(chat.id)}
+                      className="text-red-500 hover:text-red-700 p-2"
+                    >
+                      <Trash2 className="h-5 w-5" />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Action Buttons */}

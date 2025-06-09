@@ -6,14 +6,33 @@ import ProductCard from "@/components/ProductCard";
 import { messageService, type Message } from "@/utils/messageService";
 import { useProduct } from "@/utils/productContext";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const PersonB = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [showOfferInput, setShowOfferInput] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { selectedProduct } = useProduct();
+  const { selectedProduct, setSelectedProduct, getProductById } = useProduct();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for chat ID in URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const chatId = params.get("chat");
+
+    if (chatId) {
+      // Find the product by ID
+      const product = getProductById(chatId);
+
+      if (product) {
+        // Set as selected product
+        setSelectedProduct(product);
+        // Set as active chat
+        messageService.setActiveChatId(chatId);
+      }
+    }
+  }, [location, getProductById, setSelectedProduct]);
 
   // Redirect to home if no product is selected
   useEffect(() => {
@@ -23,12 +42,21 @@ const PersonB = () => {
   }, [selectedProduct, navigate]);
 
   useEffect(() => {
-    // Load initial messages
-    setMessages(messageService.getMessages());
+    if (!selectedProduct) return;
+
+    const chatId = selectedProduct.id;
+
+    // Set this as the active chat
+    messageService.setActiveChatId(chatId);
+
+    // Load initial messages for this specific chat
+    setMessages(messageService.getMessages(chatId));
 
     // Listen for localStorage changes (works across tabs on same device)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "chat_messages_cross_device" && e.newValue) {
+      // Check if this is for our chat's storage key
+      const storageKey = messageService.getMessageStorageKey(chatId);
+      if (e.key === storageKey && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
           const newMessages = data.messages || data;
@@ -49,22 +77,17 @@ const PersonB = () => {
 
     // Listen for custom events (same device, different tabs)
     const handleCustomEvent = (e: CustomEvent) => {
-      if (Array.isArray(e.detail.messages)) {
+      // Only update if this event is for our chat
+      if (e.detail.chatId === chatId && Array.isArray(e.detail.messages)) {
         setMessages(e.detail.messages);
         console.log("PersonB: Messages updated via custom event");
-      } else {
-        console.error(
-          "Custom event messages is not an array:",
-          e.detail.messages
-        );
-        setMessages([]);
       }
     };
 
     // Poll for changes (works across devices sharing same localStorage)
     const pollInterval = setInterval(() => {
       try {
-        const currentMessages = messageService.getMessages();
+        const currentMessages = messageService.getMessages(chatId);
 
         // Extra safety check to ensure we have an array
         if (!Array.isArray(currentMessages)) {
@@ -101,14 +124,29 @@ const PersonB = () => {
       );
       clearInterval(pollInterval);
     };
-  }, []);
+  }, [selectedProduct]);
 
   const handleSendMessage = (text: string) => {
-    const updatedMessages = messageService.addMessage(text, "buyer");
+    if (!selectedProduct) return;
+
+    const chatId = selectedProduct.id;
+    const updatedMessages = messageService.addMessage(
+      text,
+      "buyer",
+      false,
+      false,
+      false,
+      undefined,
+      undefined,
+      chatId
+    );
     setMessages(updatedMessages);
   };
 
   const handleMakeOffer = (amount: string) => {
+    if (!selectedProduct) return;
+
+    const chatId = selectedProduct.id;
     const updatedMessages = messageService.addMessage(
       `Offer received: ${amount}€`,
       "buyer",
@@ -116,7 +154,8 @@ const PersonB = () => {
       false,
       true, // hasButton
       "Accept Offer", // buttonText
-      "accept_offer" // buttonAction
+      "accept_offer", // buttonAction
+      chatId
     );
     setMessages(updatedMessages);
     setShowOfferInput(false);
@@ -147,11 +186,13 @@ const PersonB = () => {
         status=""
         backLink="/chat-manager/all"
         showMenu={true}
+        chatId={selectedProduct?.id}
       />
 
       <div className="bg-white">
         {selectedProduct ? (
           <ProductCard
+            title={selectedProduct.productName}
             brand={selectedProduct.brand}
             condition={selectedProduct.condition}
             price={selectedProduct.price}
@@ -160,8 +201,8 @@ const PersonB = () => {
         ) : (
           <ProductCard
             brand="Chanel"
-            condition="Very good condition"
-            price="740€"
+            condition="Additional product details"
+            price="€740"
             image="/uploads/chanel.png"
           />
         )}

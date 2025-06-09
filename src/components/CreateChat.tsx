@@ -1,14 +1,22 @@
+import { messageService } from "@/utils/messageService";
 import { useProduct } from "@/utils/productContext";
-import { ChevronLeft, ImageIcon } from "lucide-react";
-import { useState } from "react";
+import { ChevronLeft, Copy, ImageIcon, Share2 } from "lucide-react";
+import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 
 interface FormData {
   productTitle: string;
   amount: string;
   sellerName: string;
   productImage: File | null;
-  address: string; // Shipping address
+  address: string; // Shipping address (legacy field, kept for compatibility)
+  secondDescription: string; // Second product description
+  street: string; // New field for street address
+  postalCode: string; // New field for postal code
+  city: string; // New field for city
+  country: string; // New field for country
 }
 
 const CreateChat = () => {
@@ -20,12 +28,34 @@ const CreateChat = () => {
     sellerName: "",
     productImage: null,
     address: "",
+    secondDescription: "",
+    street: "",
+    postalCode: "",
+    city: "",
+    country: "",
   });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showShareDialog, setShowShareDialog] = useState(false);
+  const [shareableLink, setShareableLink] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const linkInputRef = useRef<HTMLInputElement>(null);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleCopyLink = () => {
+    if (linkInputRef.current) {
+      linkInputRef.current.select();
+      document.execCommand("copy");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleNavigateToChat = () => {
+    navigate("/person-a");
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,7 +71,6 @@ const CreateChat = () => {
       setPreviewUrl(url);
     }
   };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -64,29 +93,147 @@ const CreateChat = () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Save the product to context
-      setSelectedProduct({
-        id: Date.now().toString(),
+      // Generate a unique ID for this chat/product
+      const productId = Date.now().toString();
+
+      // Create product object
+      const product = {
+        id: productId,
         productName: formData.productTitle,
         brand: formData.sellerName, // Using seller name as brand for now
-        condition: "New", // Default condition
-        price: `${formData.amount}€`,
+        condition: formData.secondDescription, // Use second product description instead of condition
+        price: `€${formData.amount}`,
         image: previewUrl || "/uploads/placeholder.svg",
         buyerName: "Customer", // Default buyer name
-        address: formData.address, // Shipping address
-      });
+        address: `${formData.street}, ${formData.postalCode}, ${formData.city}, ${formData.country}`, // Full address for backward compatibility
+        street: formData.street,
+        postalCode: formData.postalCode,
+        city: formData.city,
+        country: formData.country,
+      };
+
+      // Save the product to context (this will also add it to allProducts)
+      setSelectedProduct(product);
+
+      // Set this chat as the active one
+      messageService.setActiveChatId(productId);
 
       console.log("Creating chat with data:", formData);
-      // Navigate to all chats view
-      navigate("/chat-manager/all");
+
+      // Auto-trigger the Payment Received functionality for this specific chat
+      triggerPaymentReceivedMessage(product);
+
+      // Generate shareable links
+      const adminLink = messageService.getShareableLink(productId, "admin");
+      const customerLink = messageService.getShareableLink(
+        productId,
+        "customer"
+      );
+
+      // Store the links
+      setShareableLink(adminLink);
+
+      // Show the share dialog
+      setShowShareDialog(true);
     } catch (error) {
       alert("Error creating chat. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Function to trigger the Payment Received message automatically
+  const triggerPaymentReceivedMessage = (product: any) => {
+    const chatId = product.id;
+
+    // Then add the payment received message with all necessary details
+    const paymentMessage = {
+      text: `Payment received: ${product.price}
+       
+      You can now ship the item to:`,
+      sender: "seller" as const,
+      isOffer: false,
+      isOfferAccepted: true,
+      hasButton: true,
+      buttonText: "Whatsapp shipping details",
+      buttonAction: "track_shipment",
+      productInfo: {
+        image: product.image,
+        title: product.productName,
+        price: product.price,
+        condition: product.condition, // This is already the second description
+        address: product.address,
+        street: product.street,
+        postalCode: product.postalCode,
+        city: product.city,
+        country: product.country,
+      },
+    };
+
+    // Add the payment received message to this specific chat
+    const updatedMessages = messageService.addMessage(
+      paymentMessage.text,
+      paymentMessage.sender,
+      paymentMessage.isOffer,
+      paymentMessage.isOfferAccepted,
+      paymentMessage.hasButton,
+      paymentMessage.buttonText,
+      paymentMessage.buttonAction,
+      chatId
+    );
+
+    // Add product info to the last message
+    updatedMessages[updatedMessages.length - 1].productInfo =
+      paymentMessage.productInfo;
+
+    // Save the updated messages for this specific chat
+    messageService.saveMessages(updatedMessages, chatId);
+
+    console.log("Auto-triggered Payment Received message for chat", chatId);
+  };
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
+      {/* Share Dialog */}
+      <Dialog open={showShareDialog} onOpenChange={setShowShareDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Share2 className="h-5 w-5" />
+              Share Chat Link
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Your chat has been created successfully! Use the link below to
+              share it with others.
+            </p>
+            <div className="flex items-center space-x-2">
+              <div className="grid flex-1 gap-2">
+                <input
+                  ref={linkInputRef}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  value={shareableLink}
+                  readOnly
+                />
+              </div>
+              <Button type="button" size="icon" onClick={handleCopyLink}>
+                {copied ? (
+                  <span className="text-green-500 text-xs">Copied!</span>
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            <Button
+              onClick={handleNavigateToChat}
+              className="w-full bg-green-600 hover:bg-green-700"
+            >
+              Continue to Chat
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="flex justify-between items-center px-6 py-4">
         <Link to="/chat-manager" className="text-gray-500">
@@ -143,20 +290,98 @@ const CreateChat = () => {
             />
           </div>
 
-          {/* Address */}
+          {/* Street */}
           <div>
             <label
-              htmlFor="address"
+              htmlFor="street"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Enter Shipping Address
+              Street
             </label>
             <input
               type="text"
-              id="address"
-              value={formData.address}
-              onChange={(e) => handleInputChange("address", e.target.value)}
-              placeholder="123 Main St, City, Country"
+              id="street"
+              value={formData.street}
+              onChange={(e) => handleInputChange("street", e.target.value)}
+              placeholder="123 Main St"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Postal Code */}
+          <div>
+            <label
+              htmlFor="postalCode"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Postal Code
+            </label>
+            <input
+              type="text"
+              id="postalCode"
+              value={formData.postalCode}
+              onChange={(e) => handleInputChange("postalCode", e.target.value)}
+              placeholder="10001"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* City */}
+          <div>
+            <label
+              htmlFor="city"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              City
+            </label>
+            <input
+              type="text"
+              id="city"
+              value={formData.city}
+              onChange={(e) => handleInputChange("city", e.target.value)}
+              placeholder="New York"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Country */}
+          <div>
+            <label
+              htmlFor="country"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Country
+            </label>
+            <input
+              type="text"
+              id="country"
+              value={formData.country}
+              onChange={(e) => handleInputChange("country", e.target.value)}
+              placeholder="United States"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              required
+            />
+          </div>
+
+          {/* Second Product Description */}
+          <div>
+            <label
+              htmlFor="secondDescription"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Second Product Description
+            </label>
+            <input
+              type="text"
+              id="secondDescription"
+              value={formData.secondDescription}
+              onChange={(e) =>
+                handleInputChange("secondDescription", e.target.value)
+              }
+              placeholder="Additional product details"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
               required
             />

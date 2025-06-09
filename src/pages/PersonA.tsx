@@ -5,13 +5,32 @@ import ProductCard from "@/components/ProductCard";
 import { messageService, type Message } from "@/utils/messageService";
 import { useProduct } from "@/utils/productContext";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const PersonA = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { selectedProduct } = useProduct();
+  const { selectedProduct, setSelectedProduct, getProductById } = useProduct();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check for chat ID in URL parameters
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const chatId = params.get("chat");
+
+    if (chatId) {
+      // Find the product by ID
+      const product = getProductById(chatId);
+
+      if (product) {
+        // Set as selected product
+        setSelectedProduct(product);
+        // Set as active chat
+        messageService.setActiveChatId(chatId);
+      }
+    }
+  }, [location, getProductById, setSelectedProduct]);
 
   // Redirect to home if no product is selected
   useEffect(() => {
@@ -21,12 +40,21 @@ const PersonA = () => {
   }, [selectedProduct, navigate]);
 
   useEffect(() => {
-    // Load initial messages
-    setMessages(messageService.getMessages());
+    if (!selectedProduct) return;
+
+    const chatId = selectedProduct.id;
+
+    // Set this as the active chat
+    messageService.setActiveChatId(chatId);
+
+    // Load initial messages for this specific chat
+    setMessages(messageService.getMessages(chatId));
 
     // Listen for localStorage changes (works across tabs on same device)
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === "chat_messages_cross_device" && e.newValue) {
+      // Check if this is for our chat's storage key
+      const storageKey = messageService.getMessageStorageKey(chatId);
+      if (e.key === storageKey && e.newValue) {
         try {
           const data = JSON.parse(e.newValue);
           const newMessages = data.messages || data;
@@ -47,22 +75,17 @@ const PersonA = () => {
 
     // Listen for custom events (same device, different tabs)
     const handleCustomEvent = (e: CustomEvent) => {
-      if (Array.isArray(e.detail.messages)) {
+      // Only update if this event is for our chat
+      if (e.detail.chatId === chatId && Array.isArray(e.detail.messages)) {
         setMessages(e.detail.messages);
         console.log("PersonA: Messages updated via custom event");
-      } else {
-        console.error(
-          "Custom event messages is not an array:",
-          e.detail.messages
-        );
-        setMessages([]);
       }
     };
 
     // Poll for changes (works across devices sharing same localStorage)
     const pollInterval = setInterval(() => {
       try {
-        const currentMessages = messageService.getMessages();
+        const currentMessages = messageService.getMessages(chatId);
 
         // Extra safety check to ensure we have an array
         if (!Array.isArray(currentMessages)) {
@@ -99,32 +122,47 @@ const PersonA = () => {
       );
       clearInterval(pollInterval);
     };
-  }, []);
+  }, [selectedProduct]);
 
   const handleSendMessage = (text: string) => {
-    const updatedMessages = messageService.addMessage(text, "seller");
+    if (!selectedProduct) return;
+
+    const chatId = selectedProduct.id;
+    const updatedMessages = messageService.addMessage(
+      text,
+      "seller",
+      false,
+      false,
+      false,
+      undefined,
+      undefined,
+      chatId
+    );
     setMessages(updatedMessages);
   };
 
   const handleSendOffer = (amount: string, address: string) => {
-    console.log("Sending offer for amount:", amount);
+    if (!selectedProduct) return;
+
+    const chatId = selectedProduct.id;
+    console.log("Sending offer for amount:", amount, "in chat:", chatId);
 
     const message = {
       // `Order received for ${amount}`,
-      text: `Payment received: ${amount}. You can send the item now to address ${
-        address || "Dhaka"
-      } Receive Post Address Info By Whatsapp`,
+      text: `Payment received: ${amount}. 
+      You can send the item now to address ${address || "Dhaka"} `,
       sender: "seller" as const,
       isOffer: false,
       isOfferAccepted: true,
       hasButton: true, // hasButton
-      buttonText: "Track Shipment", // buttonText
+      buttonText: "Received Post Address Info By Whatsapp", // buttonText
       buttonAction: "track_shipment", // buttonAction
       productInfo: {
         image: selectedProduct?.image || "/uploads/chanel.png",
         title: selectedProduct?.productName || "Luxury Product",
         price: amount,
-        condition: selectedProduct?.condition || "New",
+        condition: selectedProduct?.condition || "No description",
+        address: address,
       },
     };
 
@@ -135,7 +173,8 @@ const PersonA = () => {
       message.isOfferAccepted,
       message.hasButton,
       message.buttonText,
-      message.buttonAction
+      message.buttonAction,
+      chatId
     );
 
     // Add product info to the last message
@@ -143,7 +182,7 @@ const PersonA = () => {
       message.productInfo;
 
     // Save the updated messages
-    messageService.saveMessages(updatedMessages);
+    messageService.saveMessages(updatedMessages, chatId);
     setMessages(updatedMessages);
   };
 
@@ -175,8 +214,9 @@ const PersonA = () => {
     <div className="h-screen bg-gray-50 max-w-md mx-auto flex flex-col">
       <ChatHeader
         name="Max"
-        status="Active 2 days ago"
+        status="Online"
         backLink="/chat-manager/all"
+        chatId={selectedProduct?.id}
       />
 
       <div className="bg-white">
@@ -191,7 +231,7 @@ const PersonA = () => {
         ) : (
           <ProductCard
             brand="Dior"
-            condition="Very Good Condition"
+            condition="Additional product details"
             price="2 907,27€"
             image="/uploads/dior_bag.png"
           />
@@ -224,6 +264,12 @@ const PersonA = () => {
         onSendOffer={handleSendOffer}
         price={selectedProduct?.price || "0€"}
         address={selectedProduct?.address || ""}
+        productInfo={{
+          title: selectedProduct?.productName,
+          image: selectedProduct?.image,
+          brand: selectedProduct?.brand,
+          condition: selectedProduct?.condition,
+        }}
       />
     </div>
   );

@@ -28,7 +28,7 @@ const AddProduct = () => {
     productPrice: "",
     buyerName: "",
     productPhoto: null,
-    productCondition: "Good Condition",
+    productCondition: "", // Changed from "Good Condition" to empty for Second product description
     brand: "",
   });
 
@@ -242,21 +242,18 @@ const AddProduct = () => {
               htmlFor="productCondition"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Product Condition
+              Second Product Description
             </label>
-            <select
+            <input
+              type="text"
               id="productCondition"
               value={formData.productCondition}
               onChange={(e) =>
                 handleInputChange("productCondition", e.target.value)
               }
+              placeholder="Additional product details"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg text-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-            >
-              <option value="New with tags">New with tags</option>
-              <option value="Very Good Condition">Very Good Condition</option>
-              <option value="Good Condition">Good Condition</option>
-              <option value="Fair Condition">Fair Condition</option>
-            </select>
+            />
           </div>
 
           {/* Buyer Name */}
