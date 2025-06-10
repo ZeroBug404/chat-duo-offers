@@ -112,8 +112,8 @@ const Offers = () => {
                     return;
                   }
                   // Log both the raw amount and formatted with euro symbol
-                  console.log("Offer submitted:", amount);
-                  console.log("Formatted amount:", `${amount}€`);
+                  // console.log("Offer submitted:", amount);
+                  // console.log("Formatted amount:", `${amount}€`);
                   // Clear input after submission
                   setAmount("");
                 }}

@@ -43,10 +43,6 @@ const ChatInput = ({
   };
 
   const handleOfferAccepted = () => {
-    // if (onSendOffer) {
-    // First trigger the payment received message
-    // onSendOffer(price || "0", address || "");
-
     // Create order details for the order tracking page with improved product info
     const orderDetails = {
       id: Date.now().toString(),
@@ -73,7 +69,7 @@ const ChatInput = ({
 
   return (
     <div className="bg-white border-t border-gray-200 p-4">
-      {showOfferButton && (
+      {/* {showOfferButton && (
         <div className="mb-3">
           <Link to="/offers">
             <Button
@@ -85,7 +81,7 @@ const ChatInput = ({
             </Button>
           </Link>
         </div>
-      )}
+      )} */}
 
       <form onSubmit={handleSubmit} className="flex items-center space-x-2">
         <input
@@ -103,16 +99,16 @@ const ChatInput = ({
         </button>
       </form>
 
-      {onSendOffer && (
-        <div className="mt-3">
-          <Button
-            onClick={handleOfferAccepted}
-            className="w-full bg-green-600 text-white hover:bg-green-700"
-          >
-            Payment Received
-          </Button>
-        </div>
-      )}
+      {/* {onSendOffer && ( */}
+      <div className="mt-3">
+        <Button
+          onClick={handleOfferAccepted}
+          className="w-full bg-green-600 text-white hover:bg-green-700"
+        >
+          Payment received
+        </Button>
+      </div>
+      {/* )} */}
     </div>
   );
 };

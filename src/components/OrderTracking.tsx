@@ -38,8 +38,6 @@ const OrderTracking = () => {
     }
   }, [location]);
 
-  console.log("Order details:", orderDetails);
-
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
       {/* Header */}
@@ -119,7 +117,7 @@ const OrderTracking = () => {
           <div
             className="absolute left-2 top-2 w-0.5 bg-green-500"
             style={{
-              height: "calc(12rem * 0.6)" /* Height for 2 completed items */,
+              height: "calc(12rem * 1.1)" /* Height for 2 completed items */,
             }}
           ></div>
 
@@ -132,7 +130,25 @@ const OrderTracking = () => {
               </h3>
               <div className="text-gray-500">
                 Sent the package to:
-                {orderDetails?.street ? (
+                <div>
+                  <p>
+                    <span className="text-black">Street:</span>{" "}
+                    {orderDetails?.street}
+                  </p>
+                  <p>
+                    <span className="text-black">Postal Code:</span>{" "}
+                    {orderDetails?.postalCode}
+                  </p>
+                  <p>
+                    <span className="text-black">City:</span>{" "}
+                    {orderDetails?.city}
+                  </p>
+                  <p>
+                    <span className="text-black">Country:</span>{" "}
+                    {orderDetails?.country}
+                  </p>
+                </div>
+                {/* {orderDetails?.street ? (
                   <div className="text-gray-700">
                     <p>{orderDetails.street}</p>
                     <p>
@@ -144,7 +160,7 @@ const OrderTracking = () => {
                   <span className="text-gray-700 ml-1">
                     {orderDetails?.address}
                   </span>
-                )}
+                )} */}
               </div>
             </div>
           </div>
@@ -193,8 +209,8 @@ const OrderTracking = () => {
                 </span>
               </p> */}
               <div className="text-gray-500">
-                Address:{" "}
-                {orderDetails?.street ? (
+                Address:
+                {/* {orderDetails?.street ? (
                   <div className="text-gray-700">
                     <p>{orderDetails.street}</p>
                     <p>
@@ -202,11 +218,11 @@ const OrderTracking = () => {
                     </p>
                     <p>{orderDetails.country}</p>
                   </div>
-                ) : (
-                  <span className="text-gray-700 ml-1">
-                    {orderDetails?.address || "123 Main St, City"}
-                  </span>
-                )}
+                ) : ( */}
+                <span className="text-gray-700 ml-1">
+                  {orderDetails?.street}
+                </span>
+                {/* )} */}
               </div>
               {/* <p className="text-gray-500">
                 {orderDetails?.id
@@ -259,7 +275,7 @@ const OrderTracking = () => {
 
           {/* Payment scheduled */}
           <div className="flex gap-4 relative">
-            <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center z-10">
+            <div className="w-8 h-6 rounded-[25rem] bg-gray-500 flex items-center justify-center z-10">
               <Check className="h-4 w-4 text-white" />
             </div>
             <div>

@@ -148,9 +148,7 @@ const CreateChat = () => {
 
     // Then add the payment received message with all necessary details
     const paymentMessage = {
-      text: `Payment received: ${product.price}
-       
-      You can now ship the item to:`,
+      text: `${product.price}`,
       sender: "seller" as const,
       isOffer: false,
       isOfferAccepted: true,

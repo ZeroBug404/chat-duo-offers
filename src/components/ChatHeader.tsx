@@ -11,6 +11,7 @@ interface ChatHeaderProps {
   backLink: string;
   showMenu?: boolean;
   chatId?: string;
+  role?: "admin" | "buyer" | "seller";
 }
 
 const ChatHeader = ({
@@ -19,6 +20,7 @@ const ChatHeader = ({
   backLink,
   showMenu = false,
   chatId,
+  role,
 }: ChatHeaderProps) => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareableLink, setShareableLink] = useState<string>("");
@@ -61,14 +63,21 @@ const ChatHeader = ({
           </div>
         </div>
         <div className="flex items-center">
-          <button onClick={handleShare} className="p-2">
-            <Share2 className="w-5 h-5 text-gray-600" />
-          </button>
-          {showMenu && (
+          {role !== "admin" && (
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleShare}
+              className="p-2 mr-2"
+            >
+              <Share2 className="w-6 h-6 text-gray-600" />
+            </Button>
+          )}
+          {/* {showMenu && (
             <button className="p-2">
               <MoreHorizontal className="w-6 h-6 text-gray-600" />
             </button>
-          )}
+          )} */}
         </div>
       </div>
 

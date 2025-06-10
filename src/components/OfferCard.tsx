@@ -8,7 +8,6 @@ interface OfferCardProps {
 }
 
 const OfferCard = ({ amount, expiresIn, onAccept }: OfferCardProps) => {
-  console.log(amount);
   
   return (
     <div className="px-4 py-4 bg-white border-b border-gray-100">

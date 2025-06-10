@@ -61,9 +61,9 @@ const PersonA = () => {
           // Ensure we always have an array before setting state
           if (Array.isArray(newMessages)) {
             setMessages(newMessages);
-            console.log("PersonA: Messages updated via storage event");
+            // console.log("PersonA: Messages updated via storage event");
           } else {
-            console.error("Received messages is not an array:", newMessages);
+            // console.error("Received messages is not an array:", newMessages);
             // Fallback to empty array
             setMessages([]);
           }
@@ -78,7 +78,7 @@ const PersonA = () => {
       // Only update if this event is for our chat
       if (e.detail.chatId === chatId && Array.isArray(e.detail.messages)) {
         setMessages(e.detail.messages);
-        console.log("PersonA: Messages updated via custom event");
+        // console.log("PersonA: Messages updated via custom event");
       }
     };
 
@@ -98,7 +98,6 @@ const PersonA = () => {
 
         setMessages((prev) => {
           if (JSON.stringify(prev) !== JSON.stringify(currentMessages)) {
-            console.log("PersonA: Messages updated via polling");
             return currentMessages;
           }
           return prev;
@@ -145,11 +144,10 @@ const PersonA = () => {
     if (!selectedProduct) return;
 
     const chatId = selectedProduct.id;
-    console.log("Sending offer for amount:", amount, "in chat:", chatId);
 
     const message = {
       // `Order received for ${amount}`,
-      text: `Payment received: ${amount}. 
+      text: `${amount}. 
       You can send the item now to address ${address || "Dhaka"} `,
       sender: "seller" as const,
       isOffer: false,
@@ -187,7 +185,6 @@ const PersonA = () => {
   };
 
   const handleButtonClick = (action: string) => {
-    console.log("Button clicked with action:", action);
     if (action === "track_shipment") {
       navigate("/order-tracking");
     } else if (action === "accept_offer") {
@@ -208,7 +205,6 @@ const PersonA = () => {
     scrollToBottom();
   }, [messages]);
 
-  console.log(selectedProduct);
 
   return (
     <div className="h-screen bg-gray-50 max-w-md mx-auto flex flex-col">
@@ -269,6 +265,10 @@ const PersonA = () => {
           image: selectedProduct?.image,
           brand: selectedProduct?.brand,
           condition: selectedProduct?.condition,
+          street: selectedProduct?.street,
+          postalCode: selectedProduct?.postalCode,
+          city: selectedProduct?.city,
+          country: selectedProduct?.country,
         }}
       />
     </div>

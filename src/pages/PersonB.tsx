@@ -63,7 +63,6 @@ const PersonB = () => {
           // Ensure we always have an array before setting state
           if (Array.isArray(newMessages)) {
             setMessages(newMessages);
-            console.log("PersonB: Messages updated via storage event");
           } else {
             console.error("Received messages is not an array:", newMessages);
             // Fallback to empty array
@@ -80,7 +79,6 @@ const PersonB = () => {
       // Only update if this event is for our chat
       if (e.detail.chatId === chatId && Array.isArray(e.detail.messages)) {
         setMessages(e.detail.messages);
-        console.log("PersonB: Messages updated via custom event");
       }
     };
 
@@ -100,7 +98,6 @@ const PersonB = () => {
 
         setMessages((prev) => {
           if (JSON.stringify(prev) !== JSON.stringify(currentMessages)) {
-            console.log("PersonB: Messages updated via polling");
             return currentMessages;
           }
           return prev;
@@ -162,7 +159,6 @@ const PersonB = () => {
   };
 
   const handleButtonClick = (action: string) => {
-    console.log("Button clicked with action:", action);
     if (action === "track_shipment") {
       navigate("/order-tracking");
     } else if (action === "view_offer") {
@@ -187,6 +183,7 @@ const PersonB = () => {
         backLink="/chat-manager/all"
         showMenu={true}
         chatId={selectedProduct?.id}
+        role="admin"
       />
 
       <div className="bg-white">
@@ -256,7 +253,7 @@ const PersonB = () => {
         </div>
       </div>
 
-      {showOfferInput ? (
+      {/* {showOfferInput ? (
         <OfferInput
           onSubmit={handleMakeOffer}
           onCancel={() => setShowOfferInput(false)}
@@ -267,7 +264,23 @@ const PersonB = () => {
           // onMakeOffer={() => setShowOfferInput(true)}
           showOfferButton={true}
         />
-      )}
+      )} */}
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        // onSendOffer={handleSendOffer}
+        price={selectedProduct?.price || "0€"}
+        address={selectedProduct?.address || ""}
+        productInfo={{
+          title: selectedProduct?.productName,
+          image: selectedProduct?.image,
+          brand: selectedProduct?.brand,
+          condition: selectedProduct?.condition,
+          street: selectedProduct?.street,
+          postalCode: selectedProduct?.postalCode,
+          city: selectedProduct?.city,
+          country: selectedProduct?.country,
+        }}
+      />
     </div>
   );
 };
