@@ -77,7 +77,7 @@ const MessageBubble = ({
 
   if (message.isOfferAccepted) {
     return (
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center mt-10">
         {/* <div className="bg-green-100 text-green-800 px-4 py-2 rounded text-sm font-medium my-2 whitespace-pre-line w-[75%]">
           {message.text}
           <p>
@@ -153,7 +153,7 @@ const MessageBubble = ({
 
         {/* Product info box - Show only for payment received messages */}
         {/* {message.text.includes("Payment received") && ( */}
-        <div className="bg-white p-3 mt-3 w-full max-w-xs shadow-sm">
+        <div className="bg-white mt-3 w-full max-w-xs shadow-sm">
           <div className="flex items-center space-x-3">
             <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
               <img

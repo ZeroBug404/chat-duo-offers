@@ -216,7 +216,7 @@ const PersonA = () => {
       />
 
       <div className="bg-white">
-        {selectedProduct ? (
+        {/* {selectedProduct ? ( */}
           <ProductCard
             brand={selectedProduct.brand}
             condition={selectedProduct.condition}
@@ -224,14 +224,14 @@ const PersonA = () => {
             image={selectedProduct.image}
             title={selectedProduct.productName}
           />
-        ) : (
+        {/* ) : (
           <ProductCard
             brand="Dior"
             condition="Additional product details"
             price="2 907,27€"
             image="/uploads/dior_bag.png"
           />
-        )}
+        )} */}
 
         {/* <OfferCard
           amount={selectedProduct?.price}
@@ -240,8 +240,8 @@ const PersonA = () => {
         /> */}
       </div>
 
-      <div className="px-4 py-6 bg-white h-[calc(100vh-280px)] overflow-y-auto scrollbar-hide">
-        <div className="flex flex-col space-y-4">
+      <div className="px-4 bg-white h-[calc(100vh-280px)] overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col space-y-2">
           {Array.isArray(messages) &&
             messages.map((message) => (
               <MessageBubble

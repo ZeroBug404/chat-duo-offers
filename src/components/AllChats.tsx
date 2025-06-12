@@ -29,13 +29,11 @@ const AllChats = () => {
   const [showShareDialog, setShowShareDialog] = useState(false);
   const [shareableLink, setShareableLink] = useState<string>("");
   const [copied, setCopied] = useState(false);
-  const linkInputRef = useRef<HTMLInputElement>(null);
-
-  // Load all chats from products in localStorage
+  const linkInputRef = useRef<HTMLInputElement>(null); // Load all chats from products in localStorage
   useEffect(() => {
     // Convert products to chat items
     const chatItems = allProducts.map((product) => {
-      const price = parseFloat(product.price.replace("€", "").trim());
+      const price = product.price;
       return {
         id: product.id,
         productName: product.productName,
@@ -101,6 +99,7 @@ const AllChats = () => {
       setTimeout(() => setCopied(false), 2000);
     }
   };
+
   return (
     <div className="flex flex-col min-h-screen bg-white max-w-md mx-auto">
       {/* Share Dialog */}
@@ -114,7 +113,7 @@ const AllChats = () => {
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Use this link to share the chat with others.
+              Copy this link to share this chat with others.
             </p>
             <div className="flex items-center space-x-2">
               <div className="grid flex-1 gap-2">
@@ -198,12 +197,12 @@ const AllChats = () => {
                     </div>
                   </div>
                   <div className="flex">
-                    <button
+                    {/* <button
                       onClick={() => handleShare(chat.id)}
                       className="text-gray-500 hover:text-blue-600 p-2"
                     >
                       <Share2 className="h-5 w-5" />
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => handleDeleteChat(chat.id)}
                       className="text-red-500 hover:text-red-700 p-2"

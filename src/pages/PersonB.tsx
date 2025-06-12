@@ -187,7 +187,7 @@ const PersonB = () => {
       />
 
       <div className="bg-white">
-        {selectedProduct ? (
+        {/* {selectedProduct ? ( */}
           <ProductCard
             title={selectedProduct.productName}
             brand={selectedProduct.brand}
@@ -195,16 +195,16 @@ const PersonB = () => {
             price={selectedProduct.price}
             image={selectedProduct.image}
           />
-        ) : (
+        {/* ) : (
           <ProductCard
             brand="Chanel"
             condition="Additional product details"
             price="€740"
             image="/uploads/chanel.png"
           />
-        )}
+        )} */}
 
-        <div className="px-4 py-3 text-xs text-gray-500 bg-gray-50">
+        <div className="px-4 text-xs text-gray-500 bg-gray-50">
           <div className="flex items-start space-x-2">
             <div className="w-5 h-5 p-5 bg-gray-200 text-black rounded-full text-2xl flex items-center justify-center font-bold ">
               V
